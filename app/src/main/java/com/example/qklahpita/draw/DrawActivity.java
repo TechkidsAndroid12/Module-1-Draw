@@ -1,6 +1,8 @@
 package com.example.qklahpita.draw;
 
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.PorterDuff;
 import android.support.annotation.IdRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 
 import com.flask.colorpicker.ColorPickerView;
@@ -22,12 +25,29 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView ivDone;
     private RadioGroup radioGroup;
 
+    public static int currentColor = 0xFFFF8F00;
+    public static int currentSize = 10;
+
+    DrawingView drawingView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_draw);
 
         setupUI();
+        addDrawingView();
+    }
+
+    private void addDrawingView() {
+        LinearLayout linearLayout = findViewById(R.id.ll_draw);
+        drawingView = new DrawingView(this);
+
+        drawingView.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT));
+
+        linearLayout.addView(drawingView);
     }
 
     private void setupUI() {
@@ -44,20 +64,22 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
             public void onCheckedChanged(RadioGroup radioGroup, @IdRes int i) {
                 switch (i) {
                     case R.id.rb_thin: {
-
+                        currentSize = 5;
                         break;
                     }
                     case R.id.rb_medium: {
-
+                        currentSize = 10;
                         break;
                     }
                     case R.id.rb_strong: {
-
+                        currentSize = 15;
                         break;
                     }
                 }
             }
         });
+
+        ivColor.setColorFilter(currentColor);
     }
 
     @Override
@@ -79,7 +101,8 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
                         .setPositiveButton("Ok", new ColorPickerClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
-
+                                currentColor = selectedColor;
+                                ivColor.setColorFilter(currentColor);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -92,9 +115,22 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.iv_done: {
-
+                saveImage();
                 break;
             }
         }
+    }
+
+    private void saveImage() {
+        //1. get bitmap
+        drawingView.setDrawingCacheEnabled(true);
+        drawingView.buildDrawingCache();
+        Bitmap bitmap = drawingView.getDrawingCache();
+
+        //2. save bitmap to phone
+        ImageUtils.saveImage(bitmap, this);
+
+        //3. close this activity
+        this.finish();
     }
 }

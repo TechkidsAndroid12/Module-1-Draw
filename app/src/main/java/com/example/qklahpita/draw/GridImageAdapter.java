@@ -1,8 +1,10 @@
 package com.example.qklahpita.draw;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -40,7 +42,7 @@ public class GridImageAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
+    public View getView(final int i, View view, ViewGroup viewGroup) {
 
         //1. create image view
         ImageView imageView = new ImageView(context);
@@ -57,5 +59,11 @@ public class GridImageAdapter extends BaseAdapter {
         imageView.setImageBitmap(bitmap);
 
         return imageView;
+    }
+
+    public void refreshList() {
+        imageModelList.clear();
+        imageModelList.addAll(ImageUtils.getListImage());
+        notifyDataSetChanged();
     }
 }

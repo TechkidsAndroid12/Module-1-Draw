@@ -5,23 +5,32 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+import java.io.File;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemLongClickListener {
     private static final int REQUEST_PERMISSION = 1;
     private FloatingActionButton fbCamera;
     private FloatingActionButton fbBrush;
     private FloatingActionMenu fbMenu;
     private GridView gvImages;
+    private LinearLayout llTextNoImage;
+
+    GridImageAdapter gridImageAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,9 +88,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         fbBrush = findViewById(R.id.fb_brush);
         fbMenu = findViewById(R.id.fb_menu);
         gvImages = findViewById(R.id.gv_images);
+        llTextNoImage = findViewById(R.id.ll_text_no_image);
 
         fbCamera.setOnClickListener(this);
         fbBrush.setOnClickListener(this);
+
+        gvImages.setOnItemLongClickListener(this);
+        checkIfShowTextNoImageOrNot();
     }
 
     @Override
@@ -103,7 +116,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStart() {
         super.onStart();
 
-        GridImageAdapter gridImageAdapter = new GridImageAdapter(this);
+        checkIfShowTextNoImageOrNot();
+        gridImageAdapter = new GridImageAdapter(this);
         gvImages.setAdapter(gridImageAdapter);
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int position, long l) {
+        new AlertDialog.Builder(this)
+                .setTitle(ImageUtils.getListImage().get(position).name)
+                .setMessage("Do you want to delete this image?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        File file = new File(Environment.getExternalStorageDirectory() + "/" + ImageUtils.folderName,
+                                ImageUtils.getListImage().get(position).name);
+
+                        file.delete();
+                        gridImageAdapter.refreshList();
+                        checkIfShowTextNoImageOrNot();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                })
+                .create()
+                .show();
+        return false;
+    }
+
+    public void checkIfShowTextNoImageOrNot() {
+        if (ImageUtils.getListImage().size() == 0) {
+            llTextNoImage.setVisibility(View.VISIBLE);
+        } else {
+            llTextNoImage.setVisibility(View.GONE);
+        }
     }
 }

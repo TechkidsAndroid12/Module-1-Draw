@@ -1,8 +1,12 @@
 package com.example.qklahpita.draw;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.annotation.IdRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -36,16 +40,52 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_draw);
 
         setupUI();
-        addDrawingView();
+
+        if (getIntent().getBooleanExtra("camera_mode", false)) {
+            openCamera();
+        } else {
+            addDrawingView(null);
+        }
+
     }
 
-    private void addDrawingView() {
-        LinearLayout linearLayout = findViewById(R.id.ll_draw);
-        drawingView = new DrawingView(this);
+    private void openCamera() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        drawingView.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT));
+        Uri uri = ImageUtils.getUri(this);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+
+        startActivityForResult(intent, 1);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1) {
+//            Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+//            Log.d(TAG, "onActivityResult: " + bitmap.getHeight() + " " + bitmap.getWidth());
+            Bitmap bitmap = ImageUtils.getBitmap(this);
+            addDrawingView(bitmap);
+        }
+    }
+
+    private void addDrawingView(Bitmap bitmap) {
+        LinearLayout linearLayout = findViewById(R.id.ll_draw);
+
+        if (bitmap == null) {
+            drawingView = new DrawingView(this, null);
+
+            drawingView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT));
+        } else {
+            drawingView = new DrawingView(this, bitmap);
+
+            drawingView.setLayoutParams(new LinearLayout.LayoutParams(
+                    bitmap.getWidth(),
+                    bitmap.getHeight()));
+        }
 
         linearLayout.addView(drawingView);
     }
@@ -121,7 +161,13 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    ProgressDialog progressDialog;
+
     private void saveImage() {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Saving...");
+        progressDialog.show();
+
         //1. get bitmap
         drawingView.setDrawingCacheEnabled(true);
         drawingView.buildDrawingCache();
@@ -132,5 +178,12 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
 
         //3. close this activity
         this.finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        progressDialog.dismiss();
     }
 }

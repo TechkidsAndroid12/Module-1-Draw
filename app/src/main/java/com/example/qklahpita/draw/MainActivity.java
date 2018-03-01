@@ -87,6 +87,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         Intent intent = new Intent(this, DrawActivity.class);
+
+        if (view.getId() == R.id.fb_camera) {
+            intent.putExtra("camera_mode", true);
+        } else {
+            intent.putExtra("camera_mode", false);
+        }
+
         startActivity(intent);
 
         fbMenu.close(false);

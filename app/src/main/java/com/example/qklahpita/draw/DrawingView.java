@@ -23,7 +23,7 @@ public class DrawingView extends View {
 
     private Bitmap bitmap;
 
-    public DrawingView(Context context) {
+    public DrawingView(Context context, Bitmap bitmap) {
         super(context);
 
         canvas = new Canvas();
@@ -34,14 +34,20 @@ public class DrawingView extends View {
         paint.setStrokeWidth(DrawActivity.currentSize);
         paint.setAntiAlias(true);
         paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+
+        this.bitmap = bitmap;
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
-        bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        bitmap.eraseColor(Color.WHITE);
+        if (bitmap == null) {
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            bitmap.eraseColor(Color.WHITE);
+        }
         canvas = new Canvas(bitmap);
     }
 
